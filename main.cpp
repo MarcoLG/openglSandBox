@@ -84,11 +84,11 @@ int main( void )
 	glEnable(GL_CULL_FACE);
 
 
-	Object3D* trex = new Object3D("data/merc/source/merc.fbx");
-	trex->loadTexture("data/merc/textures/diffuse.dds");
-	trex->loadTextureSpec("data/merc/textures/spec.dds");
+	Object3D* trex = new Object3D("data/trex/source/trex.fbx");
+	trex->loadTexture("data/trex/textures/diffuse.bmp");
+	trex->loadTextureSpec("data/trex/textures/spec.bmp");
 	trex->setShaders("shaders/StandardShading.vertexshader", "shaders/phong.fragmentshader");
-	trex->ModelMatrix = glm::rotate(trex->ModelMatrix,glm::radians(-90.0f),glm::vec3(1.0f,0.0f,0.0f));
+	trex->ModelMatrix = glm::scale(trex->ModelMatrix,glm::vec3(0.1f,0.1f,0.1f));
 
 
 	Gizmo* gizmo = new Gizmo();

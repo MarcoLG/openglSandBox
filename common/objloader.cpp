@@ -407,7 +407,7 @@ bool loadFBX(
 	}
 	std::cout << "find " << vmesh.size() << " meshes" << endl;
 
-	for(int meshId = 1;meshId < 2/*vmesh.size()*/;meshId++){
+	for(int meshId = 0;meshId < vmesh.size();meshId++){
 
 		std::cout << "Mesh  " << meshId << " Translation :" 
 		<< vmeshTransform.at(meshId).at(0).x <<" " 

@@ -68,13 +68,13 @@ void Object3D::setShaders(std::string vfile,std::string ffile){
 
 void Object3D::loadTexture(std::string filename){
 
-	Texture = loadDDS(filename.c_str());
+	Texture = loadBMP_custom(filename.c_str());
 }
 
 
 void Object3D::loadTextureSpec(std::string filename){
 
-	TextureSpec = loadDDS(filename.c_str());
+	TextureSpec = loadBMP_custom(filename.c_str());
 }
 
 
@@ -85,7 +85,7 @@ void Object3D::loadLights(){
 	LightsBlockID = glGetUniformBlockIndex(programID, "LightBlock");
 	LightCountID = glGetUniformLocation(programID, "LightCount");
 
-	float lights[16] = {3.0,3.0,2.0,1.0, 
+	float lights[16] = {4.0,4.0,4.0,1.0, 
 						1.0,1.0,1.0,1.0,
 						-4.0,-4.0,1.0,1.0,
 						0.0,1.0,1.0,1.0 };
