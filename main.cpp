@@ -81,26 +81,19 @@ int main( void )
 	glEnable(GL_DEPTH_TEST);
 	// Accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS); 
+	glEnable(GL_CULL_FACE);
 
-	//Object3D* hands = new Object3D("data/hand/hand.fbx");
-	//hands->setShaders("StandardShading.vertexshader", "phong.fragmentshader");
-	//Object3D* body = new Object3D("data/merc/source/merc.fbx",1.0);
-	//body->ModelMatrix = glm::rotate(body->ModelMatrix,glm::radians(-90.0f),glm::vec3(1.0f,0.0f,0.0f));
-	//body->ModelMatrix = glm::scale(body->ModelMatrix,glm::vec3(0.1f,0.1f,0.1f));
-	//body->setShaders("StandardShading.vertexshader", "gooch.fragmentshader");
+
 	Object3D* trex = new Object3D("data/merc/source/merc.fbx");
 	trex->loadTexture("data/merc/textures/diffuse.dds");
 	trex->loadTextureSpec("data/merc/textures/spec.dds");
-	trex->setShaders("StandardShading.vertexshader", "phong.fragmentshader");
+	trex->setShaders("shaders/StandardShading.vertexshader", "shaders/phong.fragmentshader");
 	trex->ModelMatrix = glm::rotate(trex->ModelMatrix,glm::radians(-90.0f),glm::vec3(1.0f,0.0f,0.0f));
-	//trex->ModelMatrix = glm::scale(trex->ModelMatrix,glm::vec3(0.1f,0.1f,0.1f));
 
 
 	Gizmo* gizmo = new Gizmo();
-	gizmo->setShaders("gizmo.vertexshader", "gizmo.fragmentshader");
+	gizmo->setShaders("shaders/gizmo.vertexshader", "shaders/gizmo.fragmentshader");
 
-	// Cull triangles which normal is not towards the camera
-	//glEnable(GL_CULL_FACE);
 	do{
 
 		// Clear the screen
