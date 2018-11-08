@@ -20,6 +20,7 @@ using namespace glm;
 
 #include "object3d.h"
 #include "gizmo.h"
+#include "lighthandler.h"
 
 #include "common/shader.hpp"
 #include "common/texture.hpp"
@@ -83,13 +84,15 @@ int main( void )
 	glDepthFunc(GL_LESS); 
 	glEnable(GL_CULL_FACE);
 
+	LightHandler::getInstance()->addLight(glm::vec4(4.0,4.0,3.0,1.0), glm::vec4(1.0,1.0,1.0,1.0));
+	LightHandler::getInstance()->addLight(glm::vec4(-4.0,-4.0,1.0,1.0), glm::vec4(0.0,1.0,1.0,1.0));
 
 	Object3D* trex = new Object3D("data/trex/source/trex.fbx");
-	trex->loadTexture("data/trex/textures/diffuse.bmp");
-	trex->loadTextureSpec("data/trex/textures/spec.bmp");
 	trex->setShaders("shaders/StandardShading.vertexshader", "shaders/phong.fragmentshader");
-	trex->ModelMatrix = glm::scale(trex->ModelMatrix,glm::vec3(0.1f,0.1f,0.1f));
+	trex->loadTextureDiffuse("data/trex/textures/diffuse.bmp");
+	trex->loadTextureSpec("data/trex/textures/spec.bmp");
 
+	trex->ModelMatrix = glm::scale(trex->ModelMatrix,glm::vec3(0.5f,0.5f,0.5f));
 
 	Gizmo* gizmo = new Gizmo();
 	gizmo->setShaders("shaders/gizmo.vertexshader", "shaders/gizmo.fragmentshader");

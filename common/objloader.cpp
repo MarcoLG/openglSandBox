@@ -8,6 +8,8 @@
 #include "objloader.hpp"
 #include "../skeleton.h"
 #include "../node.h"
+#include "../object3d.h"
+#include "../mesh.h"
 
 
 using namespace std;
@@ -237,7 +239,173 @@ void PrintAttribute(FbxNodeAttribute* pAttribute) {
 	std::cout << "<attribute type=" << typeName.Buffer() <<"name="<< attrName.Buffer()<<"/>"<< std::endl;
 }
 
-void PrintNode(FbxNode* pNode,std::vector<FbxMesh*>& v, std::vector<std::vector<glm::vec3>>& vt, Node* node,float scale) {
+void constructMesh(FbxMesh* fbxMesh,Mesh* m)
+{
+	std::cout << "CONSTRUCT MESH" << std::endl;
+	std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
+	std::vector<glm::vec3> temp_vertices; 
+	std::vector<glm::vec2> temp_uvs;
+	std::vector<glm::vec3> temp_normals;
+
+
+	FbxArray< FbxVector4 > pNormals;
+	fbxMesh->GetPolygonVertexNormals (pNormals);
+	for(int i=0;i < pNormals.Size();i++){
+		glm::vec3 n;
+		n.x = pNormals [i][0];
+		n.y = pNormals [i][1];
+		n.z = pNormals [i][2];
+		temp_normals.push_back(n);
+	}
+
+	FbxArray< FbxVector2 > pUVs;
+
+	FbxStringList lUVSetNameList;
+	fbxMesh->GetUVSetNames(lUVSetNameList);
+
+	for (int lUVSetIndex = 0; lUVSetIndex < lUVSetNameList.GetCount(); lUVSetIndex++)
+	{
+		std::cout << lUVSetNameList.GetStringAt(lUVSetIndex) << std::endl;
+		fbxMesh->GetPolygonVertexUVs( lUVSetNameList.GetStringAt(lUVSetIndex),pUVs);
+	}
+	std::cout << "UVs size::" << pUVs.Size() << std::endl;
+	for(int i=0;i < pUVs.Size();i++){
+		glm::vec2 uv;
+		uv.x = pUVs [i][0];
+		uv.y = pUVs [i][1];
+		temp_uvs.push_back(uv);
+	}
+
+	int cont=0;
+	for(int i=0;i < fbxMesh->GetPolygonCount();i++){
+		if(fbxMesh->GetPolygonSize(i)==3)
+		{
+			for(int j=0;j<3;j++){
+				vertexIndices.push_back(fbxMesh->GetPolygonVertex(i,j));
+				int v_index = fbxMesh->GetPolygonVertex(i,j);
+
+				m->normals.push_back(temp_normals[cont]);
+				m->uvs.push_back(temp_uvs[cont]);
+				cont ++;
+
+			}
+		}
+		else if(fbxMesh->GetPolygonSize(i)==4)
+		{
+			int a = fbxMesh->GetPolygonVertex(i,0);
+			int b = fbxMesh->GetPolygonVertex(i,1);
+			int c = fbxMesh->GetPolygonVertex(i,2);
+			int d = fbxMesh->GetPolygonVertex(i,3);
+
+			vertexIndices.push_back(a);
+			vertexIndices.push_back(b);
+			vertexIndices.push_back(c);
+			vertexIndices.push_back(a);
+			vertexIndices.push_back(c);
+			vertexIndices.push_back(d);
+
+			m->normals.push_back(temp_normals[cont]);
+			m->normals.push_back(temp_normals[cont+1]);
+			m->normals.push_back(temp_normals[cont+2]);
+			m->normals.push_back(temp_normals[cont]);
+			m->normals.push_back(temp_normals[cont+2]);
+			m->normals.push_back(temp_normals[cont+3]);
+
+
+
+			m->uvs.push_back(temp_uvs[cont]);
+			m->uvs.push_back(temp_uvs[cont+1]);
+			m->uvs.push_back(temp_uvs[cont+2]);
+			m->uvs.push_back(temp_uvs[cont]);
+			m->uvs.push_back(temp_uvs[cont+2]);
+			m->uvs.push_back(temp_uvs[cont+3]);
+
+			cont +=4;
+
+
+
+
+		}else if(fbxMesh->GetPolygonSize(i)==5){
+
+			int a = fbxMesh->GetPolygonVertex(i,0);
+			int b = fbxMesh->GetPolygonVertex(i,1);
+			int c = fbxMesh->GetPolygonVertex(i,2);
+			int d = fbxMesh->GetPolygonVertex(i,3);
+			int e = fbxMesh->GetPolygonVertex(i,4);
+
+			vertexIndices.push_back(a);
+			vertexIndices.push_back(b);
+			vertexIndices.push_back(c);
+			vertexIndices.push_back(a);
+			vertexIndices.push_back(c);
+			vertexIndices.push_back(d);
+			vertexIndices.push_back(a);
+			vertexIndices.push_back(d);
+			vertexIndices.push_back(e);
+
+
+			m->normals.push_back(temp_normals[cont]);
+			m->normals.push_back(temp_normals[cont+1]);
+			m->normals.push_back(temp_normals[cont+2]);
+			m->normals.push_back(temp_normals[cont]);
+			m->normals.push_back(temp_normals[cont+2]);
+			m->normals.push_back(temp_normals[cont+3]);
+			m->normals.push_back(temp_normals[cont]);
+			m->normals.push_back(temp_normals[cont+3]);
+			m->normals.push_back(temp_normals[cont+4]);
+
+			m->uvs.push_back(temp_uvs[cont]);
+			m->uvs.push_back(temp_uvs[cont+1]);
+			m->uvs.push_back(temp_uvs[cont+2]);
+			m->uvs.push_back(temp_uvs[cont]);
+			m->uvs.push_back(temp_uvs[cont+2]);
+			m->uvs.push_back(temp_uvs[cont+3]);
+			m->uvs.push_back(temp_uvs[cont]);
+			m->uvs.push_back(temp_uvs[cont+3]);
+			m->uvs.push_back(temp_uvs[cont+4]);
+			cont +=5;
+		}
+	}
+
+
+	FbxVector4* vs = fbxMesh->GetControlPoints();
+	for(int i=0;i < fbxMesh->GetControlPointsCount();i++){
+		glm::vec4 vertex;
+		vertex.x = vs [i][0];
+		vertex.y = vs [i][1];
+		vertex.z = vs [i][2];
+		vertex.w = 1;
+
+
+		temp_vertices.push_back(glm::vec3(vertex.x,vertex.y,vertex.z));
+
+	}
+
+
+
+
+		// For each vertex of each triangle
+	for( unsigned int i=0; i<vertexIndices.size(); i++ ){
+
+		// Get the indices of its attributes
+		unsigned int vertexIndex = vertexIndices[i];
+		// Get the attributes thanks to the index
+		glm::vec3 vertex = temp_vertices[ vertexIndex];
+		//glm::vec2 uv = fbxMesh->[ uvIndex-1
+		//glm::vec3 normal = temp_normals[ i];
+		//m->normals.push_back(normal); 
+
+		// Put the attributes in buffers
+		m->vertices.push_back(vertex);
+		//out_uvs     .push_back(uv);
+
+	}
+	m->loadMesh();
+	
+
+}
+
+void PrintNode(FbxNode* pNode,std::vector<FbxMesh*>& v, std::vector<std::vector<glm::vec3>>& vt,Mesh* m, Node* node,float scale) {
 
 	const char* lSkeletonTypes[] = { "Root", "Limb", "Limb Node", "Effector" };
 	PrintTabs();
@@ -259,6 +427,9 @@ void PrintNode(FbxNode* pNode,std::vector<FbxMesh*>& v, std::vector<std::vector<
 		PrintAttribute(pNode->GetNodeAttributeByIndex(i));
 		if( pNode->GetNodeAttributeByIndex(i)->GetAttributeType()==FbxNodeAttribute::eMesh){
 			v.push_back(pNode->GetMesh());
+			
+			Mesh* msh = new Mesh();
+			m->vmesh.push_back(msh);
 
 
 			std::vector<glm::vec3> vec;
@@ -277,6 +448,16 @@ void PrintNode(FbxNode* pNode,std::vector<FbxMesh*>& v, std::vector<std::vector<
 			gscaling.x=scaling[0];
 			gscaling.y=scaling[1];
 			gscaling.z=scaling[2];
+
+			/*msh->ModelMatrix = glm::translate(msh->ModelMatrix,gtranslation/scale);	
+			msh->ModelMatrix = glm::rotate(msh->ModelMatrix,glm::radians(grotation.x),glm::vec3(1.0f,0.0f,0.0f));
+			msh->ModelMatrix = glm::rotate(msh->ModelMatrix,glm::radians(grotation.y),glm::vec3(0.0f,1.0f,0.0f));
+			msh->ModelMatrix = glm::rotate(msh->ModelMatrix,glm::radians(grotation.z),glm::vec3(0.0f,0.0f,1.0f));
+			msh->ModelMatrix = glm::scale(msh->ModelMatrix,gscaling);	*/
+
+
+			constructMesh(pNode->GetMesh(),msh);
+			m = msh;
 
 			vec.push_back(gtranslation);
 			vec.push_back(grotation);
@@ -352,7 +533,7 @@ void PrintNode(FbxNode* pNode,std::vector<FbxMesh*>& v, std::vector<std::vector<
 
     // Recursively print the children.
 	for(int j = 0; j < pNode->GetChildCount(); j++)
-		PrintNode(pNode->GetChild(j),v,vt,node,scale);
+		PrintNode(pNode->GetChild(j),v,vt,m,node,scale);
 
 	numTabs--;
 	PrintTabs();
@@ -362,9 +543,7 @@ void PrintNode(FbxNode* pNode,std::vector<FbxMesh*>& v, std::vector<std::vector<
 
 bool loadFBX(
 	const char * path, 
-	std::vector<glm::vec3> & out_vertices, 
-	std::vector<glm::vec2> & out_uvs,
-	std::vector<glm::vec3> & out_normals,
+	Object3D* obj,
 	Skeleton* skel,
 	float scale
 	){
@@ -403,197 +582,9 @@ bool loadFBX(
 
 	if(lRootNode) {
 		for(int i = 0; i < lRootNode->GetChildCount(); i++)
-			PrintNode(lRootNode->GetChild(i),vmesh,vmeshTransform,root,scale);
+			PrintNode(lRootNode->GetChild(i),vmesh,vmeshTransform,obj->rootMesh,root,scale);
 	}
-	std::cout << "find " << vmesh.size() << " meshes" << endl;
-
-	for(int meshId = 0;meshId < vmesh.size();meshId++){
-
-		std::cout << "Mesh  " << meshId << " Translation :" 
-		<< vmeshTransform.at(meshId).at(0).x <<" " 
-		<< vmeshTransform.at(meshId).at(0).y  << " "
-		<< vmeshTransform.at(meshId).at(0).z << endl;
-
-		std::cout << "Mesh  " << meshId << " Rotation :" 
-		<< vmeshTransform.at(meshId).at(1).x <<" " 
-		<< vmeshTransform.at(meshId).at(1).y  << " "
-		<< vmeshTransform.at(meshId).at(1).z << endl;
-
-		std::cout << "Mesh  " << meshId << " Scaling :" 
-		<< vmeshTransform.at(meshId).at(2).x <<" " 
-		<< vmeshTransform.at(meshId).at(2).y  << " "
-		<< vmeshTransform.at(meshId).at(2).z << endl;
-
-		std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
-		std::vector<glm::vec3> temp_vertices; 
-		std::vector<glm::vec2> temp_uvs;
-		std::vector<glm::vec3> temp_normals;
-
-
-		FbxArray< FbxVector4 > pNormals;
-		vmesh.at(meshId)->GetPolygonVertexNormals (pNormals);
-		for(int i=0;i < pNormals.Size();i++){
-			glm::vec3 n;
-			n.x = pNormals [i][0];
-			n.y = pNormals [i][1];
-			n.z = pNormals [i][2];
-			temp_normals.push_back(n);
-		}
-
-		FbxArray< FbxVector2 > pUVs;
-
-		FbxStringList lUVSetNameList;
-		vmesh.at(meshId)->GetUVSetNames(lUVSetNameList);
-
-		for (int lUVSetIndex = 0; lUVSetIndex < lUVSetNameList.GetCount(); lUVSetIndex++)
-		{
-			std::cout << lUVSetNameList.GetStringAt(lUVSetIndex) << std::endl;
-			vmesh.at(meshId)->GetPolygonVertexUVs( lUVSetNameList.GetStringAt(lUVSetIndex),pUVs);
-		}
-		std::cout << "UVs size::" << pUVs.Size() << std::endl;
-		for(int i=0;i < pUVs.Size();i++){
-			glm::vec2 uv;
-			uv.x = pUVs [i][0];
-			uv.y = pUVs [i][1];
-			temp_uvs.push_back(uv);
-		}
-
-		int cont=0;
-		for(int i=0;i < vmesh.at(meshId)->GetPolygonCount();i++){
-			if(vmesh.at(meshId)->GetPolygonSize(i)==3)
-			{
-				for(int j=0;j<3;j++){
-					vertexIndices.push_back(vmesh.at(meshId)->GetPolygonVertex(i,j));
-					int v_index = vmesh.at(meshId)->GetPolygonVertex(i,j);
-
-					out_normals.push_back(temp_normals[cont]);
-					out_uvs.push_back(temp_uvs[cont]);
-					cont ++;
-
-				}
-			}
-			else if(vmesh.at(meshId)->GetPolygonSize(i)==4)
-			{
-				int a = vmesh.at(meshId)->GetPolygonVertex(i,0);
-				int b = vmesh.at(meshId)->GetPolygonVertex(i,1);
-				int c = vmesh.at(meshId)->GetPolygonVertex(i,2);
-				int d = vmesh.at(meshId)->GetPolygonVertex(i,3);
-
-				vertexIndices.push_back(a);
-				vertexIndices.push_back(b);
-				vertexIndices.push_back(c);
-				vertexIndices.push_back(a);
-				vertexIndices.push_back(c);
-				vertexIndices.push_back(d);
-
-				out_normals.push_back(temp_normals[cont]);
-				out_normals.push_back(temp_normals[cont+1]);
-				out_normals.push_back(temp_normals[cont+2]);
-				out_normals.push_back(temp_normals[cont]);
-				out_normals.push_back(temp_normals[cont+2]);
-				out_normals.push_back(temp_normals[cont+3]);
-
-
-
-				out_uvs.push_back(temp_uvs[cont]);
-				out_uvs.push_back(temp_uvs[cont+1]);
-				out_uvs.push_back(temp_uvs[cont+2]);
-				out_uvs.push_back(temp_uvs[cont]);
-				out_uvs.push_back(temp_uvs[cont+2]);
-				out_uvs.push_back(temp_uvs[cont+3]);
-
-				cont +=4;
-
-
-
-
-			}else if(vmesh.at(meshId)->GetPolygonSize(i)==5){
-
-				int a = vmesh.at(meshId)->GetPolygonVertex(i,0);
-				int b = vmesh.at(meshId)->GetPolygonVertex(i,1);
-				int c = vmesh.at(meshId)->GetPolygonVertex(i,2);
-				int d = vmesh.at(meshId)->GetPolygonVertex(i,3);
-				int e = vmesh.at(meshId)->GetPolygonVertex(i,4);
-
-				vertexIndices.push_back(a);
-				vertexIndices.push_back(b);
-				vertexIndices.push_back(c);
-				vertexIndices.push_back(a);
-				vertexIndices.push_back(c);
-				vertexIndices.push_back(d);
-				vertexIndices.push_back(a);
-				vertexIndices.push_back(d);
-				vertexIndices.push_back(e);
-
-
-				out_normals.push_back(temp_normals[cont]);
-				out_normals.push_back(temp_normals[cont+1]);
-				out_normals.push_back(temp_normals[cont+2]);
-				out_normals.push_back(temp_normals[cont]);
-				out_normals.push_back(temp_normals[cont+2]);
-				out_normals.push_back(temp_normals[cont+3]);
-				out_normals.push_back(temp_normals[cont]);
-				out_normals.push_back(temp_normals[cont+3]);
-				out_normals.push_back(temp_normals[cont+4]);
-
-				out_uvs.push_back(temp_uvs[cont]);
-				out_uvs.push_back(temp_uvs[cont+1]);
-				out_uvs.push_back(temp_uvs[cont+2]);
-				out_uvs.push_back(temp_uvs[cont]);
-				out_uvs.push_back(temp_uvs[cont+2]);
-				out_uvs.push_back(temp_uvs[cont+3]);
-				out_uvs.push_back(temp_uvs[cont]);
-				out_uvs.push_back(temp_uvs[cont+3]);
-				out_uvs.push_back(temp_uvs[cont+4]);
-				cont +=5;
-			}
-		}
-
-
-		FbxVector4* vs = vmesh.at(meshId)->GetControlPoints();
-		for(int i=0;i < vmesh.at(meshId)->GetControlPointsCount();i++){
-			glm::vec4 vertex;
-			vertex.x = vs [i][0];
-			vertex.y = vs [i][1];
-			vertex.z = vs [i][2];
-			vertex.w = 1;
-			glm::mat4 ModelMatrix = glm::mat4(1.0);
-
-			ModelMatrix = glm::translate(ModelMatrix,vmeshTransform.at(meshId).at(0));		
-			ModelMatrix = glm::rotate(ModelMatrix,glm::radians(vmeshTransform.at(meshId).at(1).x),glm::vec3(1.0f,0.0f,0.0f));
-			ModelMatrix = glm::rotate(ModelMatrix,glm::radians(vmeshTransform.at(meshId).at(1).y),glm::vec3(0.0f,1.0f,0.0f));
-			ModelMatrix = glm::rotate(ModelMatrix,glm::radians(vmeshTransform.at(meshId).at(1).z),glm::vec3(0.0f,0.0f,1.0f));
-			ModelMatrix = glm::scale(ModelMatrix,vmeshTransform.at(meshId).at(2));	
-
-			vertex = /*ModelMatrix***/vertex;
-			vertex /= scale;
-			//cout << vertex.x;
-			temp_vertices.push_back(glm::vec3(vertex.x,vertex.y,vertex.z));
-
-		}
-
-
-
-
-		// For each vertex of each triangle
-		for( unsigned int i=0; i<vertexIndices.size(); i++ ){
-
-		// Get the indices of its attributes
-			unsigned int vertexIndex = vertexIndices[i];
-		// Get the attributes thanks to the index
-			glm::vec3 vertex = temp_vertices[ vertexIndex];
-		//glm::vec2 uv = vmesh.at(meshId)->[ uvIndex-1
-		//glm::vec3 normal = temp_normals[ i];
-		//out_normals.push_back(normal); 
-
-		// Put the attributes in buffers
-			out_vertices.push_back(vertex);
-		//out_uvs     .push_back(uv);
-
-		}
-		cout << "Mesh n°" << meshId << " count " << out_vertices.size()<<endl;
-	} 
-
+	
     // Destroy the SDK manager and all the other objects it was handling.
 	lSdkManager->Destroy();
 }

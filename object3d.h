@@ -9,7 +9,7 @@
 #include <glm/glm.hpp>
 
 class Skeleton;
-
+class Mesh;
 
 
 class Object3D 
@@ -22,44 +22,14 @@ public:
  ~Object3D();
 
  void setShaders(std::string vfile,std::string ffile);
- void loadLights();
  void loadMesh();
- void loadTexture(std::string filename);
+ void loadTextureDiffuse(std::string filename);
  void loadTextureSpec(std::string filename);
  void draw();
 
- std::string vertShaderFilename;
- std::string fragShaderFilename;
- std::string meshFilename;
- std::string textureFilename;
-
-
- std::vector<glm::vec3> vertices;
- std::vector<glm::vec2> uvs;
- std::vector<glm::vec3> normals;
-
- GLuint programID;
- GLuint MatrixID;
- GLuint ViewMatrixID;
- GLuint ModelMatrixID;
- GLuint TextureID;
- GLuint TextureSpecID;
- GLuint TextureHandler;
- GLuint VertexArrayID;
- GLuint LightsBlockID;
- GLuint LightCountID;
- GLuint lightBindingPoint;
-
- GLuint Texture;
- GLuint TextureSpec;
- GLuint vertexbuffer;
- GLuint normalbuffer;
- GLuint uvbuffer;
- GLuint lightbuffer;
-
  glm::mat4 ModelMatrix;
-
-
+ std::string meshFilename;
+ Mesh* rootMesh;
  float load_scale;
 
  Skeleton* skel;
