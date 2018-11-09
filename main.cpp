@@ -21,6 +21,7 @@ using namespace glm;
 #include "object3d.h"
 #include "gizmo.h"
 #include "lighthandler.h"
+#include "fbo.h"
 
 #include "common/shader.hpp"
 #include "common/texture.hpp"
@@ -43,10 +44,13 @@ int main( void )
 	glfwWindowHint(GLFW_SAMPLES, 16);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
-	//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); 
+
 	// Open a window and create its OpenGL context
-	window = glfwCreateWindow( 1024, 768, "Phong Shader", NULL, NULL);
+	int width = 1024;
+	int height = 768;
+	window = glfwCreateWindow( width, height, "Phong Shader", NULL, NULL);
+	
 	glfwSetWindowPos(window, 1500, 0);
 	if( window == NULL ){
 		fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
@@ -72,7 +76,7 @@ int main( void )
 
     // Set the mouse at the center of the screen
 	glfwPollEvents();
-	glfwSetCursorPos(window, 1024/2, 768/2);
+	glfwSetCursorPos(window, width/2, height/2);
 
 
 	// Dark blue background
@@ -97,9 +101,11 @@ int main( void )
 	Gizmo* gizmo = new Gizmo();
 	gizmo->setShaders("shaders/gizmo.vertexshader", "shaders/gizmo.fragmentshader");
 
+	FBO fbo(width,height);
+
 	do{
 
-		// Clear the screen
+		fbo.setFBO();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Compute the MVP matrix from keyboard and mouse input
@@ -108,6 +114,9 @@ int main( void )
 		//hands->draw();
 		//trex->draw();
 		trex->draw();
+
+		
+		fbo.draw();
 
 		// Swap buffers
 		glfwSwapBuffers(window);
