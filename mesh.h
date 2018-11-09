@@ -66,6 +66,8 @@ public:
 
  Skeleton* skel;
 
+ std::string name;
+
 }; 
 
 #endif

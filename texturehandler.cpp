@@ -34,7 +34,7 @@ TextureHandler* TextureHandler::getInstance(){
  		}
  	}
 
-	GLuint textureID = loadBMP_custom(filename.c_str());
+	GLuint textureID = loadDDS(filename.c_str());
 	Texture t;
 	t.filename = filename;
 	t.textureID = textureID;

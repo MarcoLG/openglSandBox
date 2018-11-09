@@ -241,12 +241,11 @@ void PrintAttribute(FbxNodeAttribute* pAttribute) {
 
 void constructMesh(FbxMesh* fbxMesh,Mesh* m)
 {
-	std::cout << "CONSTRUCT MESH" << std::endl;
+	std::cout << "CONSTRUCT MESH ::" << m->name <<  std::endl;
 	std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
 	std::vector<glm::vec3> temp_vertices; 
 	std::vector<glm::vec2> temp_uvs;
 	std::vector<glm::vec3> temp_normals;
-
 
 	FbxArray< FbxVector4 > pNormals;
 	fbxMesh->GetPolygonVertexNormals (pNormals);
@@ -429,6 +428,7 @@ void PrintNode(FbxNode* pNode,std::vector<FbxMesh*>& v, std::vector<std::vector<
 			v.push_back(pNode->GetMesh());
 			
 			Mesh* msh = new Mesh();
+			msh->name= std::string(nodeName);
 			m->vmesh.push_back(msh);
 
 
@@ -449,11 +449,11 @@ void PrintNode(FbxNode* pNode,std::vector<FbxMesh*>& v, std::vector<std::vector<
 			gscaling.y=scaling[1];
 			gscaling.z=scaling[2];
 
-			/*msh->ModelMatrix = glm::translate(msh->ModelMatrix,gtranslation/scale);	
+			msh->ModelMatrix = glm::translate(msh->ModelMatrix,gtranslation);	
 			msh->ModelMatrix = glm::rotate(msh->ModelMatrix,glm::radians(grotation.x),glm::vec3(1.0f,0.0f,0.0f));
 			msh->ModelMatrix = glm::rotate(msh->ModelMatrix,glm::radians(grotation.y),glm::vec3(0.0f,1.0f,0.0f));
 			msh->ModelMatrix = glm::rotate(msh->ModelMatrix,glm::radians(grotation.z),glm::vec3(0.0f,0.0f,1.0f));
-			msh->ModelMatrix = glm::scale(msh->ModelMatrix,gscaling);	*/
+			msh->ModelMatrix = glm::scale(msh->ModelMatrix,gscaling);	
 
 
 			constructMesh(pNode->GetMesh(),msh);

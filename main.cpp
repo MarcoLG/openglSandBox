@@ -50,7 +50,7 @@ int main( void )
 	int width = 1024;
 	int height = 768;
 	window = glfwCreateWindow( width, height, "Phong Shader", NULL, NULL);
-	
+
 	glfwSetWindowPos(window, 1500, 0);
 	if( window == NULL ){
 		fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
@@ -91,12 +91,12 @@ int main( void )
 	LightHandler::getInstance()->addLight(glm::vec4(4.0,4.0,3.0,1.0), glm::vec4(1.0,1.0,1.0,1.0));
 	LightHandler::getInstance()->addLight(glm::vec4(-4.0,-4.0,1.0,1.0), glm::vec4(0.0,1.0,1.0,1.0));
 
-	Object3D* trex = new Object3D("data/trex/source/trex.fbx");
-	trex->setShaders("shaders/StandardShading.vertexshader", "shaders/phong.fragmentshader");
-	trex->loadTextureDiffuse("data/trex/textures/diffuse.bmp");
-	trex->loadTextureSpec("data/trex/textures/spec.bmp");
+	Object3D* trex = new Object3D("data/merc/source/merc.fbx");
+	trex->setShaders("shaders/StandardShading.vertexshader", "shaders/toon.fragmentshader");
+	trex->loadTextureDiffuse("data/merc/textures/diffuse.dds");
+	trex->loadTextureSpec("data/merc/textures/spec.dds");
 
-	trex->ModelMatrix = glm::scale(trex->ModelMatrix,glm::vec3(0.5f,0.5f,0.5f));
+	trex->ModelMatrix = glm::scale(trex->ModelMatrix,glm::vec3(0.01f,0.01f,0.01f));
 
 	Gizmo* gizmo = new Gizmo();
 	gizmo->setShaders("shaders/gizmo.vertexshader", "shaders/gizmo.fragmentshader");

@@ -3,6 +3,7 @@
 
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 
 #include <iostream>
@@ -137,12 +138,13 @@ void Mesh::draw(glm::mat4 modelmat){
 
 	//skel->ModelMatrix = glm::translate(ModelMatrix,glm::vec3(0,0,1));
 	//skel->draw();
-	ModelMatrix = glm::mat4(1.0);
-	ModelMatrix = modelmat*ModelMatrix;
+	//std::cout <<"\n\n" << name << "\n" << glm::to_string(ModelMatrix) << std::endl;
+	glm::mat4 Model = ModelMatrix;
+	Model = modelmat*Model;
 	if(isRoot){
 
 		for(Mesh* m : vmesh){
-			m->draw(ModelMatrix);
+			m->draw(Model);
 		}
 		return;
 	}
@@ -151,12 +153,12 @@ void Mesh::draw(glm::mat4 modelmat){
 	glm::mat4 ProjectionMatrix = getProjectionMatrix();
 	glm::mat4 ViewMatrix = getViewMatrix();
 
-	glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+	glm::mat4 MVP = ProjectionMatrix * ViewMatrix * Model;
 
 		// Send our transformation to the currently bound shader, 
 		// in the "MVP" uniform
 	glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
-	glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
+	glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &Model[0][0]);
 	glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
 
 
