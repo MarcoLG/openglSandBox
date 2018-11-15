@@ -31,8 +31,29 @@ using namespace glm;
 
 
 
-int main( void )
+int main( int argc, char* argv[] )
 {
+
+	std::string filename;
+	float rotatex=0.0f;
+	float scaleUniform=1.0f;
+	for(int i=1;i<argc-1;i+=2){
+		std::cout << argv[i] << std::endl;
+		switch (argv[i][1]){
+			case 'f':
+				filename=std::string(argv[i+1]);
+				break;
+			case 'r':
+				rotatex=atof(argv[i+1]);
+				break;
+			case 's':
+				scaleUniform=atof(argv[i+1]);
+				break;
+			default:
+				break;
+		}
+	}
+	std::cout << "file :" << filename << " scale : " << scaleUniform << " rotatex : "<< rotatex << std::endl;
 	// Initialise GLFW
 	if( !glfwInit() )
 	{
@@ -86,22 +107,27 @@ int main( void )
 	glEnable(GL_DEPTH_TEST);
 	// Accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS); 
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 
-	LightHandler::getInstance()->addLight(glm::vec4(4.0,4.0,3.0,1.0), glm::vec4(1.0,1.0,1.0,1.0));
+	LightHandler::getInstance()->addLight(glm::vec4(3.0,3.0,2.0,1.0), glm::vec4(1.0,1.0,1.0,1.0));
 	LightHandler::getInstance()->addLight(glm::vec4(-4.0,-4.0,1.0,1.0), glm::vec4(0.0,1.0,1.0,1.0));
 
-	Object3D* trex = new Object3D("data/merc/source/merc.fbx");
-	trex->setShaders("shaders/StandardShading.vertexshader", "shaders/toon.fragmentshader");
-	trex->loadTextureDiffuse("data/merc/textures/diffuse.dds");
-	trex->loadTextureSpec("data/merc/textures/spec.dds");
+	Object3D* trex = new Object3D("data/"+filename+"/");
+	trex->autoShaders();
+	//trex->setShaders("shaders/StandardShading.vertexshader", "shaders/phong.fragmentshader");
+	//trex->setShaders("shaders/tangentShading.vertexshader", "shaders/normal.fragmentshader");
+	/*trex->loadTextureDiffuse("data/succubus/textures/diffuse.jpg");
+	trex->loadTextureSpec("data/succubus/textures/spec.jpg");
+	trex->loadTextureNormal("data/succubus/textures/normal.jpg");*/
+	//trex->loadTextureBump("data/trex/textures/bump.bmp");
 
-	trex->ModelMatrix = glm::scale(trex->ModelMatrix,glm::vec3(0.01f,0.01f,0.01f));
+	trex->ModelMatrix = glm::scale(trex->ModelMatrix,glm::vec3(scaleUniform));
+	trex->ModelMatrix = glm::rotate(trex->ModelMatrix,glm::radians(rotatex),glm::vec3(1.0f,0.0f,0.0f));
 
 	Gizmo* gizmo = new Gizmo();
 	gizmo->setShaders("shaders/gizmo.vertexshader", "shaders/gizmo.fragmentshader");
 
-	FBO fbo(width,height);
+	FBO fbo(width*2,height*2);
 
 	do{
 
@@ -113,9 +139,10 @@ int main( void )
 		gizmo->draw();
 		//hands->draw();
 		//trex->draw();
+		
 		trex->draw();
 
-		
+		glViewport(0,0,width,height);
 		fbo.draw();
 
 		// Swap buffers

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string>
+#include <map>
 #include <iostream>
 #include <cstring>
 #include <glm/glm.hpp>
@@ -121,6 +122,197 @@ bool loadOBJ(
 
 #include <fbxsdk.h>
 
+void DisplayTextureInfo(FbxTexture* pTexture, int pBlendMode)
+{
+    FbxFileTexture *lFileTexture = FbxCast<FbxFileTexture>(pTexture);
+    FbxProceduralTexture *lProceduralTexture = FbxCast<FbxProceduralTexture>(pTexture);
+    std::cout << "            Name: \""<< pTexture->GetName()<< "\""<< std::endl;
+    if (lFileTexture)
+    {
+        std::cout << "            Type: File Texture"<< std::endl;
+        std::cout << "            File Name: \""<< lFileTexture->GetFileName() << "\""<< std::endl;
+    }
+    else if (lProceduralTexture)
+    {
+        std::cout << "            Type: Procedural Texture";
+    }
+    std::cout << "            Scale U: "<< pTexture->GetScaleU()<< std::endl;
+    std::cout << "            Scale V: "<< pTexture->GetScaleV()<< std::endl;
+    std::cout << "            Translation U: "<< pTexture->GetTranslationU()<< std::endl;
+    std::cout << "            Translation V: "<< pTexture->GetTranslationV()<< std::endl;
+    std::cout << "            Swap UV: "<< pTexture->GetSwapUV()<< std::endl;
+    std::cout << "            Rotation U: "<< pTexture->GetRotationU()<< std::endl;
+    std::cout << "            Rotation V: "<< pTexture->GetRotationV()<< std::endl;
+    std::cout << "            Rotation W: "<< pTexture->GetRotationW()<< std::endl;
+    const char* lAlphaSources[] = { "None", "RGB Intensity", "Black" };
+    std::cout << "            Alpha Source: "<< lAlphaSources[pTexture->GetAlphaSource()]<< std::endl;
+    std::cout << "            Cropping Left: "<< pTexture->GetCroppingLeft()<< std::endl;
+    std::cout << "            Cropping Top: "<< pTexture->GetCroppingTop()<< std::endl;
+    std::cout << "            Cropping Right: "<< pTexture->GetCroppingRight()<< std::endl;
+    std::cout << "            Cropping Bottom: "<< pTexture->GetCroppingBottom()<< std::endl;
+    const char* lMappingTypes[] = { "Null", "Planar", "Spherical", "Cylindrical", 
+        "Box", "Face", "UV", "Environment" };
+    std::cout << "            Mapping Type: "<< lMappingTypes[pTexture->GetMappingType()]<< std::endl;
+    if (pTexture->GetMappingType() == FbxTexture::ePlanar)
+    {
+        const char* lPlanarMappingNormals[] = { "X", "Y", "Z" };
+        std::cout << "            Planar Mapping Normal: "<< lPlanarMappingNormals[pTexture->GetPlanarMappingNormal()]<< std::endl;
+    }
+    const char* lBlendModes[]   = { "Translucent", "Additive", "Modulate", "Modulate2", "Over", "Normal", "Dissolve", "Darken", "ColorBurn", "LinearBurn",
+                                    "DarkerColor", "Lighten", "Screen", "ColorDodge", "LinearDodge", "LighterColor", "SoftLight", "HardLight", "VividLight",
+                                    "LinearLight", "PinLight", "HardMix", "Difference", "Exclusion", "Substract", "Divide", "Hue", "Saturation", "Color",
+                                    "Luminosity", "Overlay"};   
+    
+    if(pBlendMode >= 0)
+        std::cout << "            Blend Mode: "<< lBlendModes[pBlendMode]<< std::endl;
+    std::cout << "            Alpha: "<< pTexture->GetDefaultAlpha();
+    if (lFileTexture)
+    {
+        const char* lMaterialUses[] = { "Model Material", "Default Material" };
+        std::cout << "            Material Use: "<< lMaterialUses[lFileTexture->GetMaterialUse()]<< std::endl;
+    }
+    const char* pTextureUses[] = { "Standard", "Shadow Map", "Light Map", 
+        "Spherical Reflexion Map", "Sphere Reflexion Map", "Bump Normal Map" };
+    std::cout << "            Texture Use: "<< pTextureUses[pTexture->GetTextureUse()]<< std::endl;
+    std::cout << ""<< std::endl;                
+}
+void FindAndDisplayTextureInfoByProperty(FbxProperty pProperty, bool& pDisplayHeader, int pMaterialIndex){
+    if( pProperty.IsValid() )
+    {
+        int lTextureCount = pProperty.GetSrcObjectCount<FbxTexture>();
+        for (int j = 0; j < lTextureCount; ++j)
+        {
+            //Here we have to check if it's layeredtextures, or just textures:
+            FbxLayeredTexture *lLayeredTexture = pProperty.GetSrcObject<FbxLayeredTexture>(j);
+            if (lLayeredTexture)
+            {
+                std::cout << "    Layered Texture: "<< j<< std::endl;                
+                int lNbTextures = lLayeredTexture->GetSrcObjectCount<FbxTexture>();
+                for(int k =0; k<lNbTextures; ++k)
+                {
+                    FbxTexture* lTexture = lLayeredTexture->GetSrcObject<FbxTexture>(k);
+                    if(lTexture)
+                    {
+                        if(pDisplayHeader){                    
+                            std::cout << "    Textures connected to Material "<< pMaterialIndex<< std::endl;
+                            pDisplayHeader = false;
+                        }
+                        //NOTE the blend mode is ALWAYS on the LayeredTexture and NOT the one on the texture.
+                        //Why is that?  because one texture can be shared on different layered textures and might
+                        //have different blend modes.
+                        FbxLayeredTexture::EBlendMode lBlendMode;
+                        lLayeredTexture->GetTextureBlendMode(k, lBlendMode);
+                        std::cout << "    Textures for "<< pProperty.GetName()<< std::endl;
+                        std::cout << "        Texture "<< k<< std::endl;  
+                        DisplayTextureInfo(lTexture, (int) lBlendMode);   
+                    }
+                }
+            }
+            else
+            {
+                //no layered texture simply get on the property
+                FbxTexture* lTexture = pProperty.GetSrcObject<FbxTexture>(j);
+                if(lTexture)
+                {
+                    //display connected Material header only at the first time
+                    if(pDisplayHeader){                    
+                        std::cout << "    Textures connected to Material "<< pMaterialIndex<< std::endl;
+                        pDisplayHeader = false;
+                    }             
+                    std::cout << "    Textures for "<< pProperty.GetName()<< std::endl;
+                    std::cout << "        Texture "<< j<< std::endl;  
+                    DisplayTextureInfo(lTexture, -1);
+                }
+            }
+        }
+    }//end if pProperty
+}
+void DisplayTexture(FbxGeometry* pGeometry)
+{
+    int lMaterialIndex;
+    FbxProperty lProperty;
+    if(pGeometry->GetNode()==NULL)
+        return;
+    int lNbMat = pGeometry->GetNode()->GetSrcObjectCount<FbxSurfaceMaterial>();
+    std::cout << "  Material Count "<< lNbMat<< std::endl;
+    for (lMaterialIndex = 0; lMaterialIndex < lNbMat; lMaterialIndex++){
+        FbxSurfaceMaterial *lMaterial = pGeometry->GetNode()->GetSrcObject<FbxSurfaceMaterial>(lMaterialIndex);
+        bool lDisplayHeader = true;
+        //go through all the possible textures
+        if(lMaterial){
+            int lTextureIndex;
+            FBXSDK_FOR_EACH_TEXTURE(lTextureIndex)
+            {
+                lProperty = lMaterial->FindProperty(FbxLayerElement::sTextureChannelNames[lTextureIndex]);
+                FindAndDisplayTextureInfoByProperty(lProperty, lDisplayHeader, lMaterialIndex); 
+            }
+        }//end if(lMaterial)
+    }// end for lMaterialIndex     
+}
+
+void registerTexture(FbxProperty pProperty, bool& pDisplayHeader, int pMaterialIndex, std::map<std::string, std::string>& textures){
+    if( pProperty.IsValid() )
+    {
+        int lTextureCount = pProperty.GetSrcObjectCount<FbxTexture>();
+        for (int j = 0; j < lTextureCount; ++j)
+        {
+	        //no layered texture simply get on the property
+	        FbxTexture* lTexture = pProperty.GetSrcObject<FbxTexture>(j);
+	        if(lTexture)
+	        {          
+	            std::string type(pProperty.GetName());
+	          	FbxFileTexture *lFileTexture = FbxCast<FbxFileTexture>(lTexture);
+
+			    if (lFileTexture)
+			    {
+			    	std::string path = lFileTexture->GetFileName();
+			    	int beginIdx = path.find_last_of('/');
+			    	if(beginIdx==-1){
+			    		beginIdx = path.find_last_of('\\');
+			    	}
+
+			    	path = path.substr(beginIdx+1) ;
+			    	int pos =path.find(' ');
+			    	while(pos>=0){
+			    		path.replace(pos,1,"_");
+			    		pos =path.find(' ');
+
+
+			    	}
+
+			        textures.insert(std::make_pair(type,path));
+			    }
+
+	        }
+            
+        }
+    }//end if pProperty
+}
+
+void getTextures(FbxGeometry* pGeometry,  std::map<std::string, std::string>& textures)
+{
+    int lMaterialIndex;
+    int i=0;
+    FbxProperty lProperty;
+    if(pGeometry->GetNode()==NULL)
+        return;
+    int lNbMat = pGeometry->GetNode()->GetSrcObjectCount<FbxSurfaceMaterial>();
+    if(lNbMat==2)
+    	i=0;
+    for (lMaterialIndex=i; lMaterialIndex < lNbMat; lMaterialIndex++){
+        FbxSurfaceMaterial *lMaterial = pGeometry->GetNode()->GetSrcObject<FbxSurfaceMaterial>(lMaterialIndex);
+        bool lDisplayHeader = true;
+        //go through all the possible textures
+        if(lMaterial){
+            int lTextureIndex;
+            FBXSDK_FOR_EACH_TEXTURE(lTextureIndex)
+            {
+                lProperty = lMaterial->FindProperty(FbxLayerElement::sTextureChannelNames[lTextureIndex]);
+                registerTexture(lProperty, lDisplayHeader, lMaterialIndex, textures); 
+            }
+        }//end if(lMaterial)
+    }// end for lMaterialIndex     
+}
 
 // Get the matrix of the given pose
 FbxAMatrix GetPoseMatrix(FbxPose* pPose, int pNodeIndex)
@@ -190,6 +382,7 @@ FbxAMatrix GetGlobalPosition(FbxNode* pNode, const FbxTime& pTime, FbxPose* pPos
 	return lGlobalPosition;
 }
 
+
 /**
  * Return a string-based representation based on the attribute type.
  */
@@ -239,7 +432,7 @@ void PrintAttribute(FbxNodeAttribute* pAttribute) {
 	std::cout << "<attribute type=" << typeName.Buffer() <<"name="<< attrName.Buffer()<<"/>"<< std::endl;
 }
 
-void constructMesh(FbxMesh* fbxMesh,Mesh* m)
+void constructMesh(FbxMesh* fbxMesh,Mesh* m, std::map<std::string, std::string>& textures)
 {
 	std::cout << "CONSTRUCT MESH ::" << m->name <<  std::endl;
 	std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
@@ -261,7 +454,6 @@ void constructMesh(FbxMesh* fbxMesh,Mesh* m)
 
 	FbxStringList lUVSetNameList;
 	fbxMesh->GetUVSetNames(lUVSetNameList);
-
 	for (int lUVSetIndex = 0; lUVSetIndex < lUVSetNameList.GetCount(); lUVSetIndex++)
 	{
 		std::cout << lUVSetNameList.GetStringAt(lUVSetIndex) << std::endl;
@@ -399,12 +591,30 @@ void constructMesh(FbxMesh* fbxMesh,Mesh* m)
 		//out_uvs     .push_back(uv);
 
 	}
+	std::map<std::string, std::string>::iterator it = textures.begin();
+    while(it != textures.end())
+    {
+    	std::cout << "LOAD TEXTURE FOR "<< m->name <<" TYPE : " <<it->first<<std::endl;
+        if(it->first=="DiffuseColor"){
+        	m->loadTextureDiff(it->second,false);
+        }else if(it->first=="NormalMap"){
+        	m->loadTextureNormal(it->second,false);
+        }else if(it->first=="SpecularColor"){
+        	m->loadTextureSpec(it->second,false);
+        }else if(it->first=="Bump"){
+        	m->loadTextureBump(it->second,false);
+        }else if(it->first=="EmissiveColor"){
+        	m->loadTextureEmissive(it->second,false);
+        }
+        it++;
+	}
 	m->loadMesh();
-	
 
 }
 
-void PrintNode(FbxNode* pNode,std::vector<FbxMesh*>& v, std::vector<std::vector<glm::vec3>>& vt,Mesh* m, Node* node,float scale) {
+
+
+void PrintNode(FbxNode* pNode,glm::mat4 model,Mesh* m, Node* node,float scale) {
 
 	const char* lSkeletonTypes[] = { "Root", "Limb", "Limb Node", "Effector" };
 	PrintTabs();
@@ -418,23 +628,41 @@ void PrintNode(FbxNode* pNode,std::vector<FbxMesh*>& v, std::vector<std::vector<
 	<< " rotation="<<  rotation[0]<<" " << rotation[1]<<" " << rotation[2] 
 	<< " scaling=" <<scaling[0]<<" " << scaling[1]<<" " << scaling[2]<< std::endl; 
 
-	
+	glm::vec3 gtranslation;
+	gtranslation.x=translation[0];
+	gtranslation.y=translation[1];
+	gtranslation.z=translation[2];
+
+	glm::vec3 grotation;
+	grotation.x=rotation[0];
+	grotation.y=rotation[1];
+	grotation.z=rotation[2];
+
+	glm::vec3 gscaling;
+	gscaling.x=scaling[0];
+	gscaling.y=scaling[1];
+	gscaling.z=scaling[2];
+	model = glm::translate(model,gtranslation);	
+	model = glm::rotate(model,glm::radians(grotation.x),glm::vec3(1.0f,0.0f,0.0f));
+	model = glm::rotate(model,glm::radians(grotation.y),glm::vec3(0.0f,1.0f,0.0f));
+	model = glm::rotate(model,glm::radians(grotation.z),glm::vec3(0.0f,0.0f,1.0f));
+	model = glm::scale(model,gscaling);	
 	numTabs++;
+
+	if(pNode->GetGeometry())
+		DisplayTexture(pNode->GetGeometry());
 
     // Print the node's attributes.
 	for(int i = 0; i < pNode->GetNodeAttributeCount(); i++){
 		PrintAttribute(pNode->GetNodeAttributeByIndex(i));
 		if( pNode->GetNodeAttributeByIndex(i)->GetAttributeType()==FbxNodeAttribute::eMesh){
-			v.push_back(pNode->GetMesh());
 			
-			Mesh* msh = new Mesh();
+			Mesh* msh = new Mesh(m->texturePath);
 			msh->name= std::string(nodeName);
 			m->vmesh.push_back(msh);
 
 
-			std::vector<glm::vec3> vec;
-
-			glm::vec3 gtranslation;
+			/*glm::vec3 gtranslation;
 			gtranslation.x=translation[0];
 			gtranslation.y=translation[1];
 			gtranslation.z=translation[2];
@@ -447,23 +675,23 @@ void PrintNode(FbxNode* pNode,std::vector<FbxMesh*>& v, std::vector<std::vector<
 			glm::vec3 gscaling;
 			gscaling.x=scaling[0];
 			gscaling.y=scaling[1];
-			gscaling.z=scaling[2];
+			gscaling.z=scaling[2];*/
 
-			msh->ModelMatrix = glm::translate(msh->ModelMatrix,gtranslation);	
+			msh->ModelMatrix = model; 
+			/*msh->ModelMatrix glm::translate(msh->ModelMatrix,gtranslation);	
 			msh->ModelMatrix = glm::rotate(msh->ModelMatrix,glm::radians(grotation.x),glm::vec3(1.0f,0.0f,0.0f));
 			msh->ModelMatrix = glm::rotate(msh->ModelMatrix,glm::radians(grotation.y),glm::vec3(0.0f,1.0f,0.0f));
 			msh->ModelMatrix = glm::rotate(msh->ModelMatrix,glm::radians(grotation.z),glm::vec3(0.0f,0.0f,1.0f));
-			msh->ModelMatrix = glm::scale(msh->ModelMatrix,gscaling);	
+			msh->ModelMatrix = glm::scale(msh->ModelMatrix,gscaling);*/
 
 
-			constructMesh(pNode->GetMesh(),msh);
+    		std::map<std::string, std::string> textures;
+
+
+			getTextures(pNode->GetGeometry(),textures);
+			constructMesh(pNode->GetMesh(),msh,textures);
 			m = msh;
 
-			vec.push_back(gtranslation);
-			vec.push_back(grotation);
-			vec.push_back(gscaling);
-
-			vt.push_back(vec);
 
 		}else if( pNode->GetNodeAttributeByIndex(i)->GetAttributeType()==FbxNodeAttribute::eSkeleton){
 			FbxSkeleton* lSkeleton= pNode->GetSkeleton();
@@ -533,7 +761,7 @@ void PrintNode(FbxNode* pNode,std::vector<FbxMesh*>& v, std::vector<std::vector<
 
     // Recursively print the children.
 	for(int j = 0; j < pNode->GetChildCount(); j++)
-		PrintNode(pNode->GetChild(j),v,vt,m,node,scale);
+		PrintNode(pNode->GetChild(j),model,m,node,scale);
 
 	numTabs--;
 	PrintTabs();
@@ -576,17 +804,17 @@ bool loadFBX(
 	lImporter->Destroy();
 
 	FbxNode* lRootNode = lScene->GetRootNode();
-	std::vector<FbxMesh*> vmesh;
-	std::vector<std::vector<glm::vec3>> vmeshTransform;
+	glm::mat4 modelMatCumul=glm::mat4(1.0);
 	Node* root = skel->root;
 
 	if(lRootNode) {
 		for(int i = 0; i < lRootNode->GetChildCount(); i++)
-			PrintNode(lRootNode->GetChild(i),vmesh,vmeshTransform,obj->rootMesh,root,scale);
+			PrintNode(lRootNode->GetChild(i),modelMatCumul,obj->rootMesh,root,scale);
 	}
 	
     // Destroy the SDK manager and all the other objects it was handling.
 	lSdkManager->Destroy();
+	return true;
 }
 
 #ifdef USE_ASSIMP // don't use this #define, it's only for me (it AssImp fails to compile on your machine, at least all the other tutorials still work)

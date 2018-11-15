@@ -25,10 +25,10 @@ Object3D::Object3D(){
 	ModelMatrix = glm::mat4(1.0);
 }
 
-Object3D::Object3D(std::string filename, float scale){
+Object3D::Object3D(std::string path, float scale){
 
 	ModelMatrix = glm::mat4(1.0);
-	meshFilename = filename;
+	modelPath = path;
 	load_scale=scale;
 
 	loadMesh();
@@ -51,15 +51,18 @@ void Object3D::setShaders(std::string vfile,std::string ffile){
 
 }
 
+void Object3D::autoShaders(){
 
+	rootMesh->autoShaders();
+}
 
 void Object3D::loadMesh(){
 
 	skel = new Skeleton();
-	rootMesh = new Mesh();
+	rootMesh = new Mesh(modelPath+"textures/");
 	rootMesh->isRoot=true;
 
-	loadFBX(meshFilename.c_str(), this,skel, load_scale);
+	loadFBX(std::string(modelPath+"source/model.fbx").c_str(), this,skel, load_scale);
 
 }
 
@@ -71,6 +74,19 @@ void Object3D::loadTextureDiffuse(std::string filename){
 
 void Object3D::loadTextureSpec(std::string filename){
 	rootMesh->loadTextureSpec(filename);
+}
+
+
+void Object3D::loadTextureBump(std::string filename){
+	rootMesh->loadTextureBump(filename);
+}
+
+void Object3D::loadTextureNormal(std::string filename){
+	rootMesh->loadTextureNormal(filename);
+}
+
+void Object3D::loadTextureEmissive(std::string filename){
+	rootMesh->loadTextureEmissive(filename);
 }
 
 

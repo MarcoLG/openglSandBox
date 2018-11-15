@@ -10,6 +10,9 @@
 struct Texture{
 	std::string filename;
 	GLuint textureID;
+	int w;
+	int h;
+	GLuint format;
 };
 
 class TextureHandler 
@@ -23,6 +26,8 @@ private:
 public:
  static TextureHandler* getInstance();
  GLuint getTextureID(std::string filename);
+ void getTextureSize(std::string filename,int &w, int &h);
+ void getTextureFormat(std::string filename,GLuint &format);
  std::vector<Texture> vTextures;
 
 };

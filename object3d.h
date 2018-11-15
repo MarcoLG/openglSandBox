@@ -18,17 +18,21 @@ class Object3D
 public:
 
  Object3D();
- Object3D(std::string filename, float scale=1.0);
+ Object3D(std::string path, float scale=1.0);
  ~Object3D();
 
  void setShaders(std::string vfile,std::string ffile);
+ void autoShaders();
  void loadMesh();
  void loadTextureDiffuse(std::string filename);
  void loadTextureSpec(std::string filename);
+ void loadTextureBump(std::string filename);
+ void loadTextureNormal(std::string filename);
+ void loadTextureEmissive(std::string filename);
  void draw();
 
  glm::mat4 ModelMatrix;
- std::string meshFilename;
+ std::string modelPath;
  Mesh* rootMesh;
  float load_scale;
 
