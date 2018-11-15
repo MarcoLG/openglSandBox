@@ -37,6 +37,8 @@ int main( int argc, char* argv[] )
 	std::string filename;
 	float rotatex=0.0f;
 	float scaleUniform=1.0f;
+
+	bool glow = false;
 	for(int i=1;i<argc-1;i+=2){
 		std::cout << argv[i] << std::endl;
 		switch (argv[i][1]){
@@ -49,6 +51,10 @@ int main( int argc, char* argv[] )
 			case 's':
 				scaleUniform=atof(argv[i+1]);
 				break;
+			case 'e':
+				glow=atoi(argv[i+1]);
+				break;
+
 			default:
 				break;
 		}
@@ -110,40 +116,70 @@ int main( int argc, char* argv[] )
 	//glEnable(GL_CULL_FACE);
 
 	LightHandler::getInstance()->addLight(glm::vec4(3.0,3.0,2.0,1.0), glm::vec4(1.0,1.0,1.0,1.0));
-	LightHandler::getInstance()->addLight(glm::vec4(-4.0,-4.0,1.0,1.0), glm::vec4(0.0,1.0,1.0,1.0));
+	LightHandler::getInstance()->addLight(glm::vec4(-4.0,4.0,1.0,1.0), glm::vec4(0.0,1.0,1.0,1.0));
 
 	Object3D* trex = new Object3D("data/"+filename+"/");
 	trex->autoShaders();
-	//trex->setShaders("shaders/StandardShading.vertexshader", "shaders/phong.fragmentshader");
-	//trex->setShaders("shaders/tangentShading.vertexshader", "shaders/normal.fragmentshader");
-	/*trex->loadTextureDiffuse("data/succubus/textures/diffuse.jpg");
-	trex->loadTextureSpec("data/succubus/textures/spec.jpg");
-	trex->loadTextureNormal("data/succubus/textures/normal.jpg");*/
-	//trex->loadTextureBump("data/trex/textures/bump.bmp");
 
 	trex->ModelMatrix = glm::scale(trex->ModelMatrix,glm::vec3(scaleUniform));
 	trex->ModelMatrix = glm::rotate(trex->ModelMatrix,glm::radians(rotatex),glm::vec3(1.0f,0.0f,0.0f));
 
+
+	Object3D* floor = new Object3D("data/floor/");
+	floor->autoShaders();
+
 	Gizmo* gizmo = new Gizmo();
 	gizmo->setShaders("shaders/gizmo.vertexshader", "shaders/gizmo.fragmentshader");
 
-	FBO fbo(width*2,height*2);
+
+	FBO* fbo;
+	FBO* fboEmissive;
+
+	if(glow){
+		fboEmissive = new FBO(width,height,"shaders/Passthrough.vertexshader", "shaders/fbo.fragmentshader");
+		fbo =  new FBO(width*2,height*2,"shaders/Passthrough.vertexshader", "shaders/fboglow.fragmentshader");
+		fbo->setEmissiveTexture(fboEmissive->renderedTexture);
+		trex->setShaders("shaders/emissive.vertexshader", "shaders/emissive.fragmentshader");
+
+	}else{
+		fbo =  new FBO(width*2,height*2,"shaders/Passthrough.vertexshader", "shaders/fbo.fragmentshader");
+
+	}
+
+	
 
 	do{
 
-		fbo.setFBO();
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Compute the MVP matrix from keyboard and mouse input
-		computeMatricesFromInputs();	
-		gizmo->draw();
-		//hands->draw();
-		//trex->draw();
-		
-		trex->draw();
+		computeMatricesFromInputs();
 
-		glViewport(0,0,width,height);
-		fbo.draw();
+		if(glow){
+			fboEmissive->setFBO();	
+			glClearColor(0.0, 0.0, 0.0f, 0.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			trex->setShaders("shaders/emissive.vertexshader", "shaders/emissive.fragmentshader");
+			trex->draw();
+		}
+
+		fbo->setFBO();
+
+			glClearColor(0.125f, 0.152f, 0.16f, 0.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			// Compute the MVP matrix from keyboard and mouse input
+
+			gizmo->draw();
+			//hands->draw();
+			//trex->draw();
+			
+			floor->draw();
+
+			if(glow){
+				trex->autoShaders();
+			}
+			trex->draw();
+
+		fbo->draw();
 
 		// Swap buffers
 		glfwSwapBuffers(window);
@@ -155,7 +191,13 @@ int main( int argc, char* argv[] )
 
 	// Cleanup VBO and shader
 	// Close OpenGL window and terminate GLFW
-		glfwTerminate();
+	//delete floor;
+	delete gizmo;
+	delete fbo;
+	if(fboEmissive)
+		delete fboEmissive;
+	//delete trex;
+	glfwTerminate();
 
 	return 0;
 }

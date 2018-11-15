@@ -1,0 +1,28 @@
+#version 330 core
+
+in vec2 UV;
+
+out vec4 color;
+
+uniform sampler2D renderedTexture;
+uniform sampler2D emissiveRenderedTexture;
+uniform vec2 TexelOffset;
+
+vec4 blur(vec4 c){
+	vec4 sum = vec4(0.0);
+	
+	for(int i=-3;i<=3;i++){
+		for(int j=-3;j<=3;j++){
+			sum += texture(emissiveRenderedTexture, vec2(UV.x+i*TexelOffset.x,UV.y+j*TexelOffset.y)).rgba;
+		}
+	}
+
+	return sum;
+
+}
+
+void main()
+{
+	vec4 b = blur(texture(emissiveRenderedTexture, UV.st).rgba);
+    color = texture(renderedTexture, UV.st).rgba +b*0.2;
+}

@@ -18,10 +18,16 @@
 
 
 
-FBO::FBO(int w,int h){
+FBO::FBO(int w,int h,std::string vfile,std::string ffile){
 
 	width = w;
 	height = h;
+
+	texelOffset.x = 1.0/w;
+	texelOffset.y = 1.0/h;
+	
+	useEmissive=false;
+
 	glGenFramebuffers(1, &FramebufferID);
 	glBindFramebuffer(GL_FRAMEBUFFER, FramebufferID);
 
@@ -66,8 +72,28 @@ FBO::FBO(int w,int h){
 
 	// Create and compile our GLSL program from the shaders
 
-	programID = ShaderHandler::getInstance()->getShader( "shaders/Passthrough.vertexshader", "shaders/fbo.fragmentshader");
+	setShaders( vfile,ffile);
 	texID = glGetUniformLocation(programID, "renderedTexture");
+
+
+}
+
+
+void FBO::setShaders(std::string vfile,std::string ffile){
+
+	
+	programID = ShaderHandler::getInstance()->getShader( vfile.c_str(), ffile.c_str());
+
+
+}
+
+
+void FBO::setEmissiveTexture(GLuint texture){
+
+	useEmissive=true;
+	renderedGlowTexture=texture;
+	texGlowID = glGetUniformLocation(programID, "emissiveRenderedTexture");
+	TexelOffsetID = glGetUniformLocation(programID, "TexelOffset");
 }
 
 FBO::~FBO(){
@@ -102,6 +128,18 @@ void FBO::draw(){
 	glBindTexture(GL_TEXTURE_2D, renderedTexture);
 		// Set our "renderedTexture" sampler to use Texture Unit 0
 	glUniform1i(texID, 0);
+
+
+
+	if(useEmissive){
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, renderedGlowTexture);
+		// Set our "renderedTexture" sampler to use Texture Unit 0
+		glUniform1i(texGlowID, 1);	
+		glUniform2fv(TexelOffsetID,1, &texelOffset[0]);
+	}
+
+
 
 		// 1rst attribute buffer : vertices
 	glEnableVertexAttribArray(0);

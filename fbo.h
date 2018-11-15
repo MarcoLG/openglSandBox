@@ -13,20 +13,26 @@ class FBO
     // Access specifier 
 public:
 
- FBO(int w, int h);
- FBO(std::string filename, float scale=1.0);
+ FBO(int w, int h,std::string vfile,std::string ffile);
  ~FBO();
  void setFBO();
+void setShaders(std::string vfile,std::string ffile);
+void setEmissiveTexture(GLuint texture);
  void draw();
  GLuint FramebufferID;
  GLuint renderedTexture;
+ GLuint renderedGlowTexture;
  GLuint depthrenderbuffer;
  GLuint programID;
  GLuint texID;
+ GLuint texGlowID;
  GLuint quad_vertexbuffer;
+ GLuint TexelOffsetID;
+ bool useEmissive;
 
  int width;
  int height;
+ glm::vec2 texelOffset;
 
 };
 

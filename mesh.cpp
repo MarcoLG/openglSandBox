@@ -64,7 +64,7 @@ void Mesh::setShaders(std::string vfile,std::string ffile){
 		return;
 	}
 	programID = ShaderHandler::getInstance()->getShader( vfile.c_str(), ffile.c_str());
-	std::cout << "PROGRAMID :: " << programID << std::endl;
+	//std::cout << "PROGRAMID :: " << programID << std::endl;
 
 	// Get a handle for our "MVP" uniform
 	MatrixID = glGetUniformLocation(programID, "MVP");
@@ -89,8 +89,8 @@ void Mesh::autoShaders(){
 		}
 		return;
 	}
-	std::cout << "AUTO CHOOSE SHADERS, DIFF"<< TextureDiff << " BUMP" << TextureBump 
-	<< " NORM" << TextureNorm << " EMISSIVE " << TextureEmissive << " SPEC " << TextureSpec  << std::endl;
+	//std::cout << "AUTO CHOOSE SHADERS, DIFF"<< TextureDiff << " BUMP" << TextureBump 
+	//<< " NORM" << TextureNorm << " EMISSIVE " << TextureEmissive << " SPEC " << TextureSpec  << std::endl;
 	if(TextureDiff==0){
 		setShaders("shaders/StandardShading.vertexshader", "shaders/phongNoText.fragmentshader");
 	}else if(TextureBump){
@@ -207,16 +207,19 @@ void Mesh::loadMesh(){
 	
 	skel = new Skeleton();
 
-	computeTangentBasis(vertices,uvs,normals,tangents,bitangents);
+	if(uvs.size()>0)
+		computeTangentBasis(vertices,uvs,normals,tangents,bitangents);
 
 	glBindVertexArray(VertexArrayID);
 	glGenBuffers(1, &vertexbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
 
-	glGenBuffers(1, &uvbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-	glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0], GL_STATIC_DRAW);
+	if(uvs.size()>0){
+		glGenBuffers(1, &uvbuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+		glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0], GL_STATIC_DRAW);
+	}
 
 	glGenBuffers(1, &normalbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
@@ -239,6 +242,7 @@ void Mesh::draw(glm::mat4 modelmat){
 
 	//skel->ModelMatrix = glm::translate(ModelMatrix,glm::vec3(0,0,1));
 	//skel->draw();
+
 	//std::cout <<"\n\n" << name << "\n" << glm::to_string(ModelMatrix) << std::endl;
 	if(format == GL_RGBA){
 		glEnable(GL_BLEND);
@@ -309,6 +313,7 @@ void Mesh::draw(glm::mat4 modelmat){
 			0,                  // stride
 			(void*)0            // array buffer offset
 			);
+
 
 		// 2nd attribute buffer : UVs
 	glEnableVertexAttribArray(1);

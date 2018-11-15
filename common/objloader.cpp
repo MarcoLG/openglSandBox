@@ -476,7 +476,9 @@ void constructMesh(FbxMesh* fbxMesh,Mesh* m, std::map<std::string, std::string>&
 				int v_index = fbxMesh->GetPolygonVertex(i,j);
 
 				m->normals.push_back(temp_normals[cont]);
-				m->uvs.push_back(temp_uvs[cont]);
+
+				if(temp_uvs.size())
+					m->uvs.push_back(temp_uvs[cont]);
 				cont ++;
 
 			}
@@ -503,13 +505,16 @@ void constructMesh(FbxMesh* fbxMesh,Mesh* m, std::map<std::string, std::string>&
 			m->normals.push_back(temp_normals[cont+3]);
 
 
+			if(temp_uvs.size()){
 
-			m->uvs.push_back(temp_uvs[cont]);
-			m->uvs.push_back(temp_uvs[cont+1]);
-			m->uvs.push_back(temp_uvs[cont+2]);
-			m->uvs.push_back(temp_uvs[cont]);
-			m->uvs.push_back(temp_uvs[cont+2]);
-			m->uvs.push_back(temp_uvs[cont+3]);
+				m->uvs.push_back(temp_uvs[cont]);
+				m->uvs.push_back(temp_uvs[cont+1]);
+				m->uvs.push_back(temp_uvs[cont+2]);
+				m->uvs.push_back(temp_uvs[cont]);
+				m->uvs.push_back(temp_uvs[cont+2]);
+				m->uvs.push_back(temp_uvs[cont+3]);
+
+			}
 
 			cont +=4;
 
@@ -545,15 +550,18 @@ void constructMesh(FbxMesh* fbxMesh,Mesh* m, std::map<std::string, std::string>&
 			m->normals.push_back(temp_normals[cont+3]);
 			m->normals.push_back(temp_normals[cont+4]);
 
-			m->uvs.push_back(temp_uvs[cont]);
-			m->uvs.push_back(temp_uvs[cont+1]);
-			m->uvs.push_back(temp_uvs[cont+2]);
-			m->uvs.push_back(temp_uvs[cont]);
-			m->uvs.push_back(temp_uvs[cont+2]);
-			m->uvs.push_back(temp_uvs[cont+3]);
-			m->uvs.push_back(temp_uvs[cont]);
-			m->uvs.push_back(temp_uvs[cont+3]);
-			m->uvs.push_back(temp_uvs[cont+4]);
+
+			if(temp_uvs.size()){
+				m->uvs.push_back(temp_uvs[cont]);
+				m->uvs.push_back(temp_uvs[cont+1]);
+				m->uvs.push_back(temp_uvs[cont+2]);
+				m->uvs.push_back(temp_uvs[cont]);
+				m->uvs.push_back(temp_uvs[cont+2]);
+				m->uvs.push_back(temp_uvs[cont+3]);
+				m->uvs.push_back(temp_uvs[cont]);
+				m->uvs.push_back(temp_uvs[cont+3]);
+				m->uvs.push_back(temp_uvs[cont+4]);
+			}
 			cont +=5;
 		}
 	}
@@ -608,6 +616,8 @@ void constructMesh(FbxMesh* fbxMesh,Mesh* m, std::map<std::string, std::string>&
         }
         it++;
 	}
+
+	std::cout << "END CONSTRUCT MESH ::" << m->name <<  std::endl;
 	m->loadMesh();
 
 }

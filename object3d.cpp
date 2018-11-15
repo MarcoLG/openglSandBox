@@ -17,6 +17,7 @@
 #include "common/controls.hpp"
 #include "common/objloader.hpp"
 #include "common/vboindexer.hpp"
+#include "shaderhandler.h"
 
 
 
@@ -70,12 +71,9 @@ void Object3D::loadTextureDiffuse(std::string filename){
 	rootMesh->loadTextureDiff(filename);
 }
 
-
-
 void Object3D::loadTextureSpec(std::string filename){
 	rootMesh->loadTextureSpec(filename);
 }
-
 
 void Object3D::loadTextureBump(std::string filename){
 	rootMesh->loadTextureBump(filename);
